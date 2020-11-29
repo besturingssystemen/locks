@@ -1,11 +1,9 @@
 - [Voorbereiding](#voorbereiding)
 - [GitHub classroom](#github-classroom)
-- [Locks](#lock)
-- [Multi-processing](#Multi-processing)
 - [Physical memory allocator](#physical-memory-allocator)
-  - [Locking](#locking)
-  - [Lock contention](#lock-contention)
-  - [Lock contention verminderen](#lock-contention-verminderen)
+- [Locking](#locking)
+- [Lock contention](#lock-contention)
+- [Lock contention verminderen](#lock-contention-verminderen)
 
 # Voorbereiding
 
@@ -15,14 +13,6 @@ Ter voorbereiding van deze oefenzitting word je verwacht:
 - Sectie 3.5 van het xv6 boek nog eens opgefrist te hebben.
 
 # GitHub classroom
-
-TODO
-
-# Locks
-
-TODO
-
-# Multi-processing
 
 TODO
 
@@ -126,7 +116,7 @@ kmem.freelist
 > :question: Je hebt nu genoeg informatie om de werking `kalloc` te begrijpen als we het gebruik van locks nog even buiten beschouwing laten.
 > Bekijk en verklaar [`kalloc`][kalloc], [`kfree`][kfree] en [`kinit`][kinit] (de initialisatie van `kalloc` via [`freerange`][freerange]).
 
-## Locking
+# Locking
 
 xv6 ondersteunt _multiprocessor_ systemen.
 Dit wilt zeggen dat meerdere processoren _tegelijkertijd_ code aan het uitvoeren zijn.
@@ -227,7 +217,7 @@ void release(struct spinlock* lk)
 
 > :question: Bekijk en verklaar het gebruik van `acquire` en `release` in [`kalloc`][kalloc] en [`kfree`][kfree].
 
-## Lock contention
+# Lock contention
 
 Het doel van spinlocks is dus de uitvoering van critical sections door meerdere processoren te _serializeren_.
 Met anderen woorden, terwijl een processor een critical section aan het uitvoeren is, zullen de andere processoren moeten wachten.
@@ -257,7 +247,7 @@ Verder zijn er twee kernel functies toegevoegd in `perf.h`:
 >
 > Nu zul je zien dat de lock contention significant is.
 
-## Lock contention verminderen
+# Lock contention verminderen
 
 Voor de permanente evaluatie gaan we `kalloc` aanpassen om de lock contention te verminderen.
 De oorzaak van de hoge contention in `kalloc` is het gebruik van één enkel free list voor alle processoren.
