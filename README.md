@@ -5,6 +5,7 @@
 - [Physical memory allocator](#physical-memory-allocator)
   - [Locking](#locking)
   - [Lock contention](#lock-contention)
+  - [Lock contention verminderen](#lock-contention-verminderen)
 
 # Voorbereiding
 
@@ -256,6 +257,36 @@ Verder zijn er twee kernel functies toegevoegd in `perf.h`:
 >
 > Nu zul je zien dat de lock contention significant is.
 
+## Lock contention verminderen
+
+Voor de permanente evaluatie gaan we `kalloc` aanpassen om de lock contention te verminderen.
+De oorzaak van de hoge contention in `kalloc` is het gebruik van één enkel free list voor alle processoren.
+Als elke processor een eigen free list zou hebben, kunnen we de contention (bijna) volledig vermijden.
+
+Er is echter één probleem met dit idee: wat als de free list van een processor leeg is maar een andere processor nog wel vrije frames heeft?
+Het zou jammer zijn als `kalloc` om die reden zou falen.
+Er moet dus een manier verzonnen worden zodat processors vrije frames van elkaar kunnen "stelen".
+Dit is ook de reden dat we de contention nooit volledig kunnen vermijden: processors zullen soms op elkaar moeten wachten terwijl frames verplaatst worden tussen free lists.
+
+Het idee is dus het volgende: in plaats van één enkele globale variabele [`kmem`][kmem] (die een free list en een spinlock bevat), maken we zo een variabele per processor.
+`kalloc` en `kfree` gebruiken dan de `kmem` variabele van de huidige processor om frames te alloceren en vrij te geven.
+Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de free list van andere processoren en verplaatst het een aantal frames.
+
+> :bulb: xv6 heeft een vast maximum aantal processoren gedefinieerd door de [`NCPU`][NCPU] constante.
+> Maak dus een array aan van `NCPU` `kmem` variabelen.
+
+> :bulb: In RISC-V heeft elke processor in een multiprocessor systeem een unieke id (een getal beginnende bij 0) dat terug te vinden is in het `mhartid`<sup>1</sup> CSR.
+> Dit register is enkel toegankelijk in machine mode, niet in supervisor mode waarin xv6 runt.
+> Om het processor id toch te kunnen achterhalen, [slaat xv6 `mhartid` op in het `tp` register][store mhartid] tijdens het booten in machine mode.
+> Deze waarde kan later opgevraagd worden met de [`cpuid`][cpuid] functie.
+> Je kan dit als index in de `kmem` array gebruiken om de free list van de huidige processor te krijgen.
+>
+> <sup>1</sup> RISC-V gebruikt de term _hart_ (hardware thread) om te verwijzen naar een processor.
+
+> :question: Implementeer per-processor free lists voor `kalloc`.
+> Verifieer dat xv6 nog steeds goed werkt via de `usertests`.
+> Verifieer dat de lock contention vermindert door alle locks te registreren met `perf_register_spinlock` en `stressmem` te runnen.
+
 [oz traps]: https://github.com/besturingssystemen/traps
 [xv6 book]: https://github.com/besturingssystemen/xv6-riscv
 [kalloc]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/kalloc.c#L65
@@ -276,6 +307,7 @@ Verder zijn er twee kernel functies toegevoegd in `perf.h`:
 [PHYSTOP]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/memlayout.h#L56
 [end]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/kernel.ld#L43
 [struct run]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/kalloc.c#L17
+[kmem]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/kalloc.c#L21-L24
 [kmem.freelist]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/kalloc.c#L23
 [kmem.lock]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/kalloc.c#L22
 [struct spinlock]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.h#L6
@@ -289,3 +321,6 @@ Verder zijn er twee kernel functies toegevoegd in `perf.h`:
 [perf_print_spinlocks]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/perf.c#L20
 [stressmem]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/user/stressmem.c
 [alloc_dealloc]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/user/stressmem.c#L35-L46
+[NCPU]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/param.h#L5
+[store mhartid]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/start.c#L44-L46
+[cpuid]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/proc.c#L54
