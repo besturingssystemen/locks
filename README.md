@@ -78,7 +78,7 @@ Een gedeelte wordt in beslag genomen door de code en statische data van de kerne
 xv6 laadt de kernel in het geheugen vanaf `KERNBASE` en definieert een symbool genaamd [`end`][end] om het einde van de kernel aan te geven.
 `kalloc` beheert dus het geheugen tussen `[end, PHYSTOP)`.
 
-Nu we weten _wat_ er beheert wordt, kunnen we bekijken _hoe_ het beheert wordt.
+Nu we weten _wat_ er beheerd wordt, kunnen we bekijken _hoe_ het beheerd wordt.
 Laten we eerst de interface die `kalloc` aanbiedt bespreken:
 - [`void* kalloc()`][kalloc]: Alloceert één frame en returnt het fysieke adres.
 - [`void kfree(void* pa)`][kfree]. Geeft het frame op fysiek adres `pa` vrij.
@@ -92,7 +92,7 @@ De standaard techniek voor het implementeren van dit type allocator (vaak een _m
 
 Deze linked list wordt in xv6 voorgesteld door [`struct run`][struct run] en een pointer naar het eerste element van deze list wordt opgeslagen in de globale variabele [`kmem.freelist`][kmem.freelist].
 Opvallend aan deze `struct run` is dat het _enkel_ een `next` pointer bevat, _geen_ data zoals je verwacht in een typische linked list implementatie.
-De data in dit geval zijn de frames en om geen extra geheugen te moeten gebruiken voor de linked list, wordt de `struct run` in de frames geplaatst.
+De data in dit geval zijn de frames en om geen extra geheugen te moeten gebruiken voor de linked list, wordt de `struct run` _in_ de frames geplaatst.
 De frames in de free list zijn immers niet in gebruik dus is het geen probleem om hier de nodige metadata (de `next` pointer) voor de linked list in op te slaan.
 
 `kalloc` zal het begin van de frames gebruiken om een `struct run` in op te slaan.
