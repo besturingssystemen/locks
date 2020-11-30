@@ -1,5 +1,5 @@
 - [Voorbereiding](#voorbereiding)
-- [GitHub classroom](#github-classroom)
+- [Repository](#repository)
 - [Physical memory allocator](#physical-memory-allocator)
 - [Locking](#locking)
 - [Lock contention](#lock-contention)
@@ -14,9 +14,14 @@ Ter voorbereiding van deze oefenzitting word je verwacht:
 - Hoofdstukken 6 en 7 van het [xv6 boek][xv6 book] te hebben gelezen;
 - Sectie 3.5 van het xv6 boek nog eens opgefrist te hebben.
 
-# GitHub classroom
+# Repository
 
-TODO
+We beginnen deze oefenzitting in [onze xv6 repository][xv6-riscv bss].
+Pas later zal je een eigen repository nodig hebben voor de permanente evaluatie.
+Je kan onze repository op deze manier clonen:
+```shell
+git clone https://github.com/besturingssystemen/xv6-riscv.git
+```
 
 # Physical memory allocator
 
@@ -293,6 +298,9 @@ Als je er voor zorgt dat wanneer er meerdere locks nodig zijn alle processors de
 
 # Lock contention
 
+> :warning: Vanaf nu werk je verder in je individuele repository.
+> Maak deze [hier][classroom] aan voor je verder gaat met de oefenzitting.
+
 Het doel van spinlocks is dus de uitvoering van critical sections door meerdere processoren te _serializeren_.
 Met anderen woorden, terwijl een processor een critical section aan het uitvoeren is, zullen de andere processoren moeten wachten.
 Alhoewel dit de correctheidsproblemen van `kalloc` oplost, heeft het een impact op de performantie: op elk moment zal slechts één processor een frame kunnen alloceren.
@@ -417,3 +425,5 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 [gdb]: https://github.com/besturingssystemen/klaarzetten-werkomgeving#gdb
 [push pop off]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L84-L110
 [main]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/main.c#L9
+[classroom]: https://classroom.github.com/a/t4x1aNMU
+[xv6-riscv bss]: https://github.com/besturingssystemen/xv6-riscv
