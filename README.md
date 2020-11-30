@@ -157,11 +157,11 @@ Stap 3 geeft op beide processoren het adres van dezelfde frame terug aan de opro
 We zitten nu dus in de situatie waar twee verschillende processoren dezelfde frame gaan gebruiken voor verschillende doeleinden.
 Stel je bijvoorbeeld voor dat één processor `exec` aan het uitvoeren was en de ander `sbrk`; dezelfde frame zal dus gebruikt worden voor de code van één proces en voor de heap van een ander.
 
-> **:question: Laten we eens bekijken wat er in de praktijk gebeurt als we geen locks zouden hebben in `kalloc`.
+> **:question: Laten we eens bekijken wat er in de praktijk gebeurt als we geen locks zouden hebben in `kalloc`.**
 >
-> 1. Haal de calls naar `acquire` en `release` weg uit [`kalloc`][kalloc] en run de `usertests`.
-     Verklaar het resultaat.<sup>1</sup>
-> 2. Doe nu hetzelfde voor `kfree` maar denk eerst na over wat er mis zou kunnen lopen.
+> 1. **Haal de calls naar `acquire` en `release` weg uit [`kalloc`][kalloc] en run de `usertests`.
+     Verklaar het resultaat.<sup>1</sup>**
+> 2. **Doe nu hetzelfde voor `kfree` maar denk eerst na over wat er mis zou kunnen lopen.
      Is het gebrek aan locks in `kfree` even gevaarlijk als in `kalloc`?**
 >
 > :bulb: <sup>1</sup> Eén van de dingen die concurrency (het tegelijkertijd uitvoeren van code) zo moeilijk maakt, is dat het vaak _non-deterministisch_ is.
@@ -249,18 +249,18 @@ Verder zijn er twee kernel functies toegevoegd in `perf.h`:
 - [`void perf_print_spinlocks()`][perf_print_spinlocks]: Print de contention counters van alle geregistreerde spinlocks.
   Deze functie wordt opgeroepen als je <kbd>CTRL</kbd>+<kbd>L</kbd> typt in de console.
 
-> **:question: Meet de lock contention van de `kalloc` spinlock.
-> 1. Roep `perf_register_spinlock` op in [`kinit`][kinit] (vergeet `perf.h` niet te `#include`n);
-> 2. Voer `usertests` uit;
-> 3. Typ <kbd>CTRL</kbd>+<kbd>L</kbd> in de xv6 console.
+> **:question: Meet de lock contention van de `kalloc` spinlock.**
+> 1. **Roep `perf_register_spinlock` op in [`kinit`][kinit] (vergeet `perf.h` niet te `#include`n);**
+> 2. **Voer `usertests` uit;**
+> 3. **Typ <kbd>CTRL</kbd>+<kbd>L</kbd> in de xv6 console.**
 >
-> Als het goed is, zul je zien dat de lock contention van `kmem.spinlock` relatief laag is ten opzichte van het totale aantal keer dat `acquire` werd opgeroepen.
+> **Als het goed is, zul je zien dat de lock contention van `kmem.spinlock` relatief laag is ten opzichte van het totale aantal keer dat `acquire` werd opgeroepen.
 > Dit komt omdat `usertests` geen tests uitvoert die op meerdere processoren tegelijkertijd proberen geheugen te alloceren.
-> We hebben daarom een nieuwe test, [`stressmem`][stressmem], toegevoegd die drie processen start (xv6 runt standaard op drie processoren) en in elk process in een [loop `sbrk` oproept][alloc_dealloc] om een page te alloceren en dan weer vrij te geven.
+> We hebben daarom een nieuwe test, [`stressmem`][stressmem], toegevoegd die drie processen start (xv6 runt standaard op drie processoren) en in elk process in een [loop `sbrk` oproept][alloc_dealloc] om een page te alloceren en dan weer vrij te geven.**
 >
-> 4. Meet de lock contention na het uitvoeren van `stressmem`.
+> **4. Meet de lock contention na het uitvoeren van `stressmem`.**
 >
-> Nu zul je zien dat de lock contention significant is.**
+> **Nu zul je zien dat de lock contention significant is.**
 
 # Lock contention verminderen
 
