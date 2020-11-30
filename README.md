@@ -153,9 +153,9 @@ Stel je nu voor dat twee processoren `kalloc` tegelijkertijd uitvoeren.
 Na het uitvoeren van stap 1 zullen ze beiden een lokale variabele `r` hebben die de waarde van `kmem.freelist` bevat (het adres van het eerste vrije frame).
 Essentieel aan het probleem is dat `r` op beide processoren _dezelfde_ waarde zal hebben.
 In stap 2 passen ze beide `kmem.freelist` aan naar `r->next` wat hier geen groot probleem is aangezien `r` dezelfde waarde heeft.
-Stap 3 geeft op beide processoren het adres van dezelfde frame terug aan de oproeper van `kalloc`.
-We zitten nu dus in de situatie waar twee verschillende processoren dezelfde frame gaan gebruiken voor verschillende doeleinden.
-Stel je bijvoorbeeld voor dat één processor `exec` aan het uitvoeren was en de ander `sbrk`; dezelfde frame zal dus gebruikt worden voor de code van één proces en voor de heap van een ander.
+Stap 3 geeft op beide processoren het adres van hetzelfde frame terug aan de oproeper van `kalloc`.
+We zitten nu dus in de situatie waar twee verschillende processoren hetzelfde frame gaan gebruiken voor verschillende doeleinden.
+Stel je bijvoorbeeld voor dat één processor `exec` aan het uitvoeren was en de ander `sbrk`; hetzelfde frame zal dus gebruikt worden voor de code van één proces en voor de heap van een ander.
 
 > **:question: Laten we eens bekijken wat er in de praktijk gebeurt als we geen locks zouden hebben in `kalloc`.**
 >
