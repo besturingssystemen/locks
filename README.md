@@ -1,8 +1,9 @@
 - [Voorbereiding](#voorbereiding)
-- [GitHub classroom](#github-classroom)
+- [Repository](#repository)
 - [Physical memory allocator](#physical-memory-allocator)
 - [Locking](#locking)
 - [Lock contention](#lock-contention)
+- [Deadlocks](#deadlocks)
 - [Lock contention verminderen](#lock-contention-verminderen)
 
 # Voorbereiding
@@ -13,9 +14,14 @@ Ter voorbereiding van deze oefenzitting word je verwacht:
 - Hoofdstukken 6 en 7 van het [xv6 boek][xv6 book] te hebben gelezen;
 - Sectie 3.5 van het xv6 boek nog eens opgefrist te hebben.
 
-# GitHub classroom
+# Repository
 
-TODO
+We beginnen deze oefenzitting in [onze xv6 repository][xv6-riscv bss].
+Pas later zal je een eigen repository nodig hebben voor de permanente evaluatie.
+Je kan onze repository op deze manier clonen:
+```shell
+git clone https://github.com/besturingssystemen/xv6-riscv.git
+```
 
 # Physical memory allocator
 
@@ -231,7 +237,69 @@ void release(struct spinlock* lk)
 
 > **:question: Bekijk en verklaar het gebruik van `acquire` en `release` in [`kalloc`][kalloc] en [`kfree`][kfree].**
 
+# Deadlocks
+
+Spinlocks zorgen ervoor dat een processor soms moeten wachten op een andere processor bij het binnengaan van een critial section.
+Wat als meerdere processors _op elkaar_ moeten wachten?
+Stel je voor dat de volgende twee functies door verschillende processors uitgevoerd worden:
+
+```c
+void cpu0()
+{
+  acquire(&lock_a);
+  acquire(&lock_b);
+  // Critical section
+  release(&lock_b);
+  release(&lock_a);
+}
+
+void cpu1()
+{
+  acquire(&lock_b);
+  acquire(&lock_a);
+  // Critical section
+  release(&lock_a);
+  release(&lock_b);
+}
+```
+
+Het zou kunnen gebeuren dat de instructies in de volgende volgorde uitgevoerd worden:
+```ascii
+   cpu0              | cpu1
+   ------------------|------------------
+1: acquire(&lock_a); |
+2:                   | acquire(&lock_b);
+3:                   | acquire(&lock_a);
+4: acquire(&lock_b); |
+```
+In stap 3 zal `cpu1` moeten wachten op `cpu0` omdat `lock_a` genomen werd door `cpu0` in stap 1.
+Tegelijkertijd zal `cpu0` in stap 4 moeten wachten op `cpu1` door `lock_b`.
+Er zal nu geen voortgang meer gemaakt kunnen worden omdat beide processors op elkaar aan het wachten zijn.
+Dit wordt een _deadlock_ genoemd.
+
+Deadlocks kunnen voorkomen wanneer een processor _op hetzelfde moment_ meerdere spinlocks nodig heeft.
+Als een andere processor dezelfde spinlocks ook nodig heeft, kan er een deadlock ontstaan wanneer de verschillende processors de locks in een andere volgorde proberen te krijgen.
+
+Er is daarom een relatief eenvoudige vuistregel om deadlocks te voorkomen: zorg voor een consistente _lock ordering_.
+Als je er voor zorgt dat wanneer er meerdere locks nodig zijn alle processors deze locks in dezelfde volgorde proberen te krijgen, zullen er geen deadlocks voor kunnen komen.
+
+> **:question: Overtuig jezelf dat een consistente lock ordering het probleem in het bovenstaande voorbeeld oplost.**
+
+> :bulb: Het is je misschien opgevallen dat er zelfs met één lock een deadlock kan optreden: wanneer dezelfde processor een tweede keer eenzelfde lock probeert te krijgen.
+> Aangezien deze situatie niet voor zou mogen komen in correcte code, zal xv6 in dit geval simpelweg [`panic` oproepen][spinlock holding panic].
+
+> :bulb: Deadlocks zijn vaak zeer moeilijk te debuggen omdat je programma gewoon niets meer doet.
+> Je kan echter GDB gebruiken om meer informatie te krijgen.
+> Op het moment dat xv6 vast zit en je vermoedt dat er een deadlock is, typ je <kbd>CTRL></kbd>+<kbd>C</kbd>, dit zorgt ervoor dat alle processors stoppen met uitvoeren.
+> Je kan nu de staat van elke processor bekijken met het commando `info threads`.
+> Dit toont een lijst met alle processors en de functie waarin ze op dit moment aan het uitvoeren waren.
+> Als er een deadlock was, zal je zien dat minstens twee processors `acquire` aan het uitvoeren waren.
+> Je kan nu naar een specifieke processor switchen via `thread id` (waar je `id` vervangt door de Id in de `info threads` output) om daar in detail te bekijken wat er aan de hand is (bijvoorbeeld via het `backtrace` commando).
+
 # Lock contention
+
+> :warning: Vanaf nu werk je verder in je individuele repository.
+> Maak deze [hier][classroom] aan voor je verder gaat met de oefenzitting.
 
 Het doel van spinlocks is dus de uitvoering van critical sections door meerdere processoren te _serializeren_.
 Met anderen woorden, terwijl een processor een critical section aan het uitvoeren is, zullen de andere processoren moeten wachten.
@@ -277,6 +345,10 @@ Het idee is dus het volgende: in plaats van één enkele globale variabele [`kme
 `kalloc` en `kfree` gebruiken dan de `kmem` variabele van de huidige processor om frames te alloceren en vrij te geven.
 Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de free list van andere processoren en verplaatst het een aantal frames.
 
+> **:question: Implementeer per-processor free lists voor `kalloc`.
+> Verifieer dat xv6 nog steeds goed werkt via de `usertests`.
+> Verifieer dat de lock contention vermindert door alle locks te registreren met `perf_register_spinlock` en `stressmem` te runnen.**
+
 > :bulb: xv6 heeft een vast maximum aantal processoren gedefinieerd door de [`NCPU`][NCPU] constante.
 > Maak dus een array aan van `NCPU` `kmem` variabelen.
 
@@ -288,9 +360,29 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 >
 > <sup>1</sup> RISC-V gebruikt de term _hart_ (hardware thread) om te verwijzen naar een processor.
 
-> **:question: Implementeer per-processor free lists voor `kalloc`.
-> Verifieer dat xv6 nog steeds goed werkt via de `usertests`.
-> Verifieer dat de lock contention vermindert door alle locks te registreren met `perf_register_spinlock` en `stressmem` te runnen.**
+> :bulb: [`kinit`][kinit] wordt door [`main`][main] opgeroepen op CPU 0.
+> Je kan tijdens de initialisatie van `kalloc` alle frames toewijzen aan deze CPU.
+> De andere CPUs zullen dan frames stelen wanneer ze er nodig hebben.
+
+> :bulb: `stressmem` alloceert standaard herhaaldelijk één frame en dealloceert deze onmiddelijk.
+> Dit zal dus er dus niet voor zorgen dat processors vaak frames moeten stelen.
+> Er is daarom een tweede test toegevoegd die herhaaldelijk zoveel mogelijk geheugen probeert te alloceren.
+> Run hiervoor `stressmem --oom` (OOM staat voor _out-of-memory_).
+
+> :bulb: Een belangrijke parameter voor je implementatie is het aantal frames dat per keer gestolen zal worden.
+> Experimenteer met verschillende waardes en kies de beste.
+
+> :warning: xv6 gebruikt timer interrupts om de tijd dat processen achter elkaar kunnen uitvoeren te beperken.
+> Het kan dus op elk moment gebeuren dat de scheduler ervoor kiest om en proces te stoppen om een andere process te laten uitvoeren.
+> Wanneer het eerste proces later weer herstart wordt, kan dit op een andere processor gebeuren!
+> Dit kan voor problemen zorgen voor code die `cpuid` gebruikt:
+> ```c
+> uint cpu = cpuid();
+> // Timer interrupt here
+> // Use "cpu", may not refer to current CPU due to scheduling!
+> ```
+> De makkelijkste manier om zulke problemen te voorkomen, is interrupts volledig uit te schakelen tijdens `kalloc`.
+> Gebruik [`push_off` en `pop_off`][push pop off] om interrupts respectievelijk uit en aan te zetten.
 
 [oz traps]: https://github.com/besturingssystemen/traps
 [xv6 book]: https://github.com/besturingssystemen/xv6-riscv
@@ -329,3 +421,9 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 [NCPU]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/param.h#L5
 [store mhartid]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/start.c#L44-L46
 [cpuid]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/proc.c#L54
+[spinlock holding panic]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L25-L26
+[gdb]: https://github.com/besturingssystemen/klaarzetten-werkomgeving#gdb
+[push pop off]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L84-L110
+[main]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/main.c#L9
+[classroom]: https://classroom.github.com/a/t4x1aNMU
+[xv6-riscv bss]: https://github.com/besturingssystemen/xv6-riscv
