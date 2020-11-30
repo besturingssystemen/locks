@@ -129,7 +129,7 @@ Dit wil zeggen dat meerdere processoren _tegelijkertijd_ code aan het uitvoeren 
 Deze code kan tot verschillende processen behoren maar het kan ook gebeuren dat meerdere processoren tegelijkertijd kernelcode aan het uitvoeren zijn.
 Vanaf het moment dat data structuren in de kernel door meerdere processoren gelijktijdig gebruikt worden, kunnen er problemen ontstaan.
 
-> :warning: In user space kunnen synchronizatieproblemen optreden zelfs zonder multiprocessor systeem. Wanneer twee processen een datastructuur delen en de kernel op willekeurige momenten wisselt tussen deze processen, lijkt het voor de processen alsof ze tegelijkertijd uitgevoerd worden, met standaard synchronizatieproblemen tot gevolg. In kernel space heb je hier op een single core processor geen last van. Je kan geen conflicten hebben met andere kernels, want die zijn er niet. Wanneer we met een multiprocessor werken kan dezelfde kernel op meerdere cores tegelijk worden uitgevoerd, en krijg je toch synchronziatieproblemen.
+> :warning: Synchronizatieproblemen kunnen optreden zelfs zonder multiprocessor systeem. Wanneer twee processen een datastructuur delen en de kernel op willekeurige momenten wisselt tussen deze processen, lijkt het voor de processen alsof ze tegelijkertijd uitgevoerd worden, met standaard synchronizatieproblemen tot gevolg. In kernel space heb je hier op een single core processor minder snel last van, aangezien er maar één kernel is, maar de problematiek komt zelfs dan nog steeds voor. Traps kunnen kernel-code op willekeurige momenten onderbreken waardoor deze code in feite "in parallel" wordt uitgevoerd.
 
 Neem bijvoorbeeld de volgende vereenvoudigde versie van `kalloc`:
 
