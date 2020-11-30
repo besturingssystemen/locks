@@ -352,6 +352,10 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 >
 > <sup>1</sup> RISC-V gebruikt de term _hart_ (hardware thread) om te verwijzen naar een processor.
 
+> :bulb: [`kinit`][kinit] wordt door [`main`][main] opgeroepen op CPU 0.
+> Je kan tijdens de initialisatie van `kalloc` alle frames toewijzen aan deze CPU.
+> De andere CPUs zullen dan frames stelen wanneer ze er nodig hebben.
+
 > :bulb: `stressmem` alloceert standaard herhaaldelijk één frame en dealloceert deze onmiddelijk.
 > Dit zal dus er dus niet voor zorgen dat processors vaak frames moeten stelen.
 > Er is daarom een tweede test toegevoegd die herhaaldelijk zoveel mogelijk geheugen probeert te alloceren.
@@ -412,3 +416,4 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 [spinlock holding panic]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L25-L26
 [gdb]: https://github.com/besturingssystemen/klaarzetten-werkomgeving#gdb
 [push pop off]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L84-L110
+[main]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/main.c#L9
