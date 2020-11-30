@@ -2,8 +2,8 @@
 - [Repository](#repository)
 - [Physical memory allocator](#physical-memory-allocator)
 - [Locking](#locking)
-- [Lock contention](#lock-contention)
 - [Deadlocks](#deadlocks)
+- [Lock contention](#lock-contention)
 - [Lock contention verminderen](#lock-contention-verminderen)
 
 # Voorbereiding
@@ -290,7 +290,7 @@ Als je er voor zorgt dat wanneer er meerdere locks nodig zijn alle processors de
 
 > :bulb: Deadlocks zijn vaak zeer moeilijk te debuggen omdat je programma gewoon niets meer doet.
 > Je kan echter GDB gebruiken om meer informatie te krijgen.
-> Op het moment dat xv6 vast zit en je vermoedt dat er een deadlock is, typ je <kbd>CTRL></kbd>+<kbd>C</kbd>, dit zorgt ervoor dat alle processors stoppen met uitvoeren.
+> Op het moment dat xv6 vast zit en je vermoedt dat er een deadlock is, typ je <kbd>CTRL</kbd>+<kbd>C</kbd>, dit zorgt ervoor dat alle processors stoppen met uitvoeren.
 > Je kan nu de staat van elke processor bekijken met het commando `info threads`.
 > Dit toont een lijst met alle processors en de functie waarin ze op dit moment aan het uitvoeren waren.
 > Als er een deadlock was, zal je zien dat minstens twee processors `acquire` aan het uitvoeren waren.
@@ -373,7 +373,7 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 > Experimenteer met verschillende waardes en kies de beste.
 
 > :warning: xv6 gebruikt timer interrupts om de tijd dat processen achter elkaar kunnen uitvoeren te beperken.
-> Het kan dus op elk moment gebeuren dat de scheduler ervoor kiest om en proces te stoppen om een andere process te laten uitvoeren.
+> Het kan dus op elk moment gebeuren dat de scheduler ervoor kiest om en proces te stoppen om een ander proces te laten uitvoeren.
 > Wanneer het eerste proces later weer herstart wordt, kan dit op een andere processor gebeuren!
 > Dit kan voor problemen zorgen voor code die `cpuid` gebruikt:
 > ```c
