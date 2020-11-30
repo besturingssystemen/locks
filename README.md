@@ -337,6 +337,10 @@ Het idee is dus het volgende: in plaats van één enkele globale variabele [`kme
 `kalloc` en `kfree` gebruiken dan de `kmem` variabele van de huidige processor om frames te alloceren en vrij te geven.
 Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de free list van andere processoren en verplaatst het een aantal frames.
 
+> **:question: Implementeer per-processor free lists voor `kalloc`.
+> Verifieer dat xv6 nog steeds goed werkt via de `usertests`.
+> Verifieer dat de lock contention vermindert door alle locks te registreren met `perf_register_spinlock` en `stressmem` te runnen.**
+
 > :bulb: xv6 heeft een vast maximum aantal processoren gedefinieerd door de [`NCPU`][NCPU] constante.
 > Maak dus een array aan van `NCPU` `kmem` variabelen.
 
@@ -348,9 +352,25 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 >
 > <sup>1</sup> RISC-V gebruikt de term _hart_ (hardware thread) om te verwijzen naar een processor.
 
-> **:question: Implementeer per-processor free lists voor `kalloc`.
-> Verifieer dat xv6 nog steeds goed werkt via de `usertests`.
-> Verifieer dat de lock contention vermindert door alle locks te registreren met `perf_register_spinlock` en `stressmem` te runnen.**
+> :bulb: `stressmem` alloceert standaard herhaaldelijk één frame en dealloceert deze onmiddelijk.
+> Dit zal dus er dus niet voor zorgen dat processors vaak frames moeten stelen.
+> Er is daarom een tweede test toegevoegd die herhaaldelijk zoveel mogelijk geheugen probeert te alloceren.
+> Run hiervoor `stressmem --oom` (OOM staat voor _out-of-memory_).
+
+> :bulb: Een belangrijke parameter voor je implementatie is het aantal frames dat per keer gestolen zal worden.
+> Experimenteer met verschillende waardes en kies de beste.
+
+> :warning: xv6 gebruikt timer interrupts om de tijd dat processen achter elkaar kunnen uitvoeren te beperken.
+> Het kan dus op elk moment gebeuren dat de scheduler ervoor kiest om en proces te stoppen om een andere process te laten uitvoeren.
+> Wanneer het eerste proces later weer herstart wordt, kan dit op een andere processor gebeuren!
+> Dit kan voor problemen zorgen voor code die `cpuid` gebruikt:
+> ```c
+> uint cpu = cpuid();
+> // Timer interrupt here
+> // Use "cpu", may not refer to current CPU due to scheduling!
+> ```
+> De makkelijkste manier om zulke problemen te voorkomen, is interrupts volledig uit te schakelen tijdens `kalloc`.
+> Gebruik [`push_off` en `pop_off`][push pop off] om interrupts respectievelijk uit en aan te zetten.
 
 [oz traps]: https://github.com/besturingssystemen/traps
 [xv6 book]: https://github.com/besturingssystemen/xv6-riscv
@@ -391,3 +411,4 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 [cpuid]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/proc.c#L54
 [spinlock holding panic]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L25-L26
 [gdb]: https://github.com/besturingssystemen/klaarzetten-werkomgeving#gdb
+[push pop off]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L84-L110
