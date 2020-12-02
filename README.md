@@ -3,6 +3,7 @@
 - [Physical memory allocator](#physical-memory-allocator)
 - [Locking](#locking)
 - [Deadlocks](#deadlocks)
+- [GitHub classroom](#github-classroom)
 - [Lock contention](#lock-contention)
 - [Lock contention verminderen](#lock-contention-verminderen)
 
@@ -296,10 +297,12 @@ Als je er voor zorgt dat wanneer er meerdere locks nodig zijn alle processors de
 > Als er een deadlock was, zal je zien dat minstens twee processors `acquire` aan het uitvoeren waren.
 > Je kan nu naar een specifieke processor switchen via `thread id` (waar je `id` vervangt door de Id in de `info threads` output) om daar in detail te bekijken wat er aan de hand is (bijvoorbeeld via het `backtrace` commando).
 
-# Lock contention
+# GitHub classroom
 
-> :warning: Vanaf nu werk je verder in je individuele repository.
-> Maak deze [hier][classroom] aan voor je verder gaat met de oefenzitting.
+Vanaf nu werk je verder in je individuele repository.
+Maak deze [hier][classroom] aan voor je verder gaat met de oefenzitting.
+
+# Lock contention
 
 Het doel van spinlocks is dus de uitvoering van critical sections door meerdere processoren te _serializeren_.
 Met anderen woorden, terwijl een processor een critical section aan het uitvoeren is, zullen de andere processoren moeten wachten.
