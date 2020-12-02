@@ -31,7 +31,12 @@ De implementatie van lazy allocation bouwde hier op verder en introduceerde de f
 We gaan nu de werking van `kalloc`, de _physical memory allocator_ van xv6, in detail bekijken en de performantie op multi-processor systemen proberen te verbeteren.
 
 De taak van een physical memory allocator (vanaf nu kortweg `kalloc` genoemd) is, zoals de naam doet vermoeden, het beheer van het fysieke geheugen in het systeem.
-Telkens de kernel meer geheugen nodig heeft, zal deze `kalloc` eerst vragen om een nieuwe fysieke frame, en vervolgens de frame mappen op een virtuele page.
+Telkens de kernel meer geheugen nodig heeft, zal deze `kalloc` eerst vragen om een nieuwe fysieke frame, en indien nodig vervolgens dit frame mappen op een virtuele page.
+
+> :bulb: Herinner je dat xv6 een _identity mapping_ maakt voor het gehele beschikbare fysieke geheugen.
+> Dit wilt zeggen dat binnen de kernel fysieke adressen overeenkomen met virtuele adressen.
+> Als de kernel `kalloc` gebruikt voor eigen datastructuren, zal het dus niet nodig zijn een nieuwe mapping toe te voegen.
+
 Een aantal voorbeelden van wanneer dit gebeurt:
 
 - Bij het inladen van een nieuwe executable door [`exec`][exec] wordt [`uvmalloc` gebruikt][exec uvmalloc] om user pages aan te maken.
@@ -290,7 +295,7 @@ Als je er voor zorgt dat wanneer er meerdere locks nodig zijn alle processors de
 > Aangezien deze situatie niet voor zou mogen komen in correcte code, zal xv6 in dit geval simpelweg [`panic` oproepen][spinlock holding panic].
 
 > :bulb: Deadlocks zijn vaak zeer moeilijk te debuggen omdat je programma gewoon niets meer doet.
-> Je kan echter GDB gebruiken om meer informatie te krijgen.
+> Je kan echter [GDB][gdb] gebruiken om meer informatie te krijgen.
 > Op het moment dat xv6 vast zit en je vermoedt dat er een deadlock is, typ je <kbd>CTRL</kbd>+<kbd>C</kbd>, dit zorgt ervoor dat alle processors stoppen met uitvoeren.
 > Je kan nu de staat van elke processor bekijken met het commando `info threads`.
 > Dit toont een lijst met alle processors en de functie waarin ze op dit moment aan het uitvoeren waren.
@@ -325,13 +330,13 @@ Verder zijn er twee kernel functies toegevoegd in `perf.h`:
 > 2. **Voer `usertests` uit;**
 > 3. **Typ <kbd>CTRL</kbd>+<kbd>L</kbd> in de xv6 console.**
 >
-> **Als het goed is, zul je zien dat de lock contention van `kmem.spinlock` relatief laag is ten opzichte van het totale aantal keer dat `acquire` werd opgeroepen.
+> Als het goed is, zul je zien dat de lock contention van `kmem.spinlock` relatief laag is ten opzichte van het totale aantal keer dat `acquire` werd opgeroepen.
 > Dit komt omdat `usertests` geen tests uitvoert die op meerdere processoren tegelijkertijd proberen geheugen te alloceren.
-> We hebben daarom een nieuwe test, [`stressmem`][stressmem], toegevoegd die drie processen start (xv6 runt standaard op drie processoren) en in elk process in een [loop `sbrk` oproept][alloc_dealloc] om een page te alloceren en dan weer vrij te geven.**
+> We hebben daarom een nieuwe test, [`stressmem`][stressmem], toegevoegd die drie processen start (xv6 runt standaard op drie processoren) en in elk process in een [loop `sbrk` oproept][alloc_dealloc] om een page te alloceren en dan weer vrij te geven.
 >
 > **4. Meet de lock contention na het uitvoeren van `stressmem`.**
 >
-> **Nu zul je zien dat de lock contention significant is.**
+> Nu zul je zien dat de lock contention significant is.
 
 # Lock contention verminderen
 
@@ -348,7 +353,7 @@ Het idee is dus het volgende: in plaats van één enkele globale variabele [`kme
 `kalloc` en `kfree` gebruiken dan de `kmem` variabele van de huidige processor om frames te alloceren en vrij te geven.
 Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de free list van andere processoren en verplaatst het een aantal frames.
 
-> **:question: Implementeer per-processor free lists voor `kalloc`.
+> **:question: (Permanente evaluatie) Implementeer per-processor free lists voor `kalloc`.
 > Verifieer dat xv6 nog steeds goed werkt via de `usertests`.
 > Verifieer dat de lock contention vermindert door alle locks te registreren met `perf_register_spinlock` en `stressmem` te runnen.**
 
@@ -425,7 +430,7 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 [store mhartid]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/start.c#L44-L46
 [cpuid]: https://github.com/besturingssystemen/xv6-riscv/blob/3fa0348a978d50b11ca29b58ab474b8753d6661b/kernel/proc.c#L54
 [spinlock holding panic]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L25-L26
-[gdb]: https://github.com/besturingssystemen/klaarzetten-werkomgeving#gdb
+[gdb]: https://github.com/besturingssystemen/utilities/blob/master/gdb.md
 [push pop off]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/spinlock.c#L84-L110
 [main]: https://github.com/besturingssystemen/xv6-riscv/blob/85bfd9e71f6d0dc951ebd602e868880dedbe1688/kernel/main.c#L9
 [classroom]: https://classroom.github.com/a/t4x1aNMU
