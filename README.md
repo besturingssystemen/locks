@@ -373,7 +373,7 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 > De andere CPUs zullen dan frames stelen wanneer ze er nodig hebben.
 
 > :bulb: `stressmem` alloceert standaard herhaaldelijk één frame en dealloceert deze onmiddelijk.
-> Dit zal dus er dus niet voor zorgen dat processors vaak frames moeten stelen.
+> Dit zal er dus niet voor zorgen dat processors vaak frames moeten stelen.
 > Er is daarom een tweede test toegevoegd die herhaaldelijk zoveel mogelijk geheugen probeert te alloceren.
 > Run hiervoor `stressmem --oom` (OOM staat voor _out-of-memory_).
 
@@ -381,7 +381,7 @@ Wanneer `kalloc` geen frames meer vindt in deze free list, gaat het zoeken in de
 > Experimenteer met verschillende waardes en kies de beste.
 
 > :warning: xv6 gebruikt timer interrupts om de tijd dat processen achter elkaar kunnen uitvoeren te beperken.
-> Het kan dus op elk moment gebeuren dat de scheduler ervoor kiest om en proces te stoppen om een ander proces te laten uitvoeren.
+> Het kan dus op elk moment gebeuren dat de scheduler ervoor kiest om een proces te stoppen om een ander proces te laten uitvoeren.
 > Wanneer het eerste proces later weer herstart wordt, kan dit op een andere processor gebeuren!
 > Dit kan voor problemen zorgen voor code die `cpuid` gebruikt:
 > ```c
